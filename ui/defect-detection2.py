@@ -28,6 +28,8 @@ class Ui_Form(object):
         self.label_folder = ''
         self.interval = 2000
         self.each_class_ap50 = dict()
+        self.predict_classes = str()
+        self.file_path = str()
 
     def selectFolder(self):
         ''' Select Image of Folder '''
@@ -35,6 +37,10 @@ class Ui_Form(object):
         # Open File Dialog
         folderPath = QFileDialog.getExistingDirectory(
             None, 'Select a folder:', './', QFileDialog.ShowDirsOnly)
+        
+        # if user click cancel, then return to the main window
+        if folderPath == '':
+            return None
 
         # image folder
         image_folder = os.path.join(folderPath, 'image')
@@ -50,24 +56,24 @@ class Ui_Form(object):
             self.folderImageNum.setText(f'{ numOfImages }')
             
             
-        os.chdir(path='../script/yolov7')
-        # run python3 test.py --weights best.pt --data defect.yaml --task test 
-        args = "--weights best.pt --data defect.yaml --task test "
-        return_value = subprocess.run([f"python3 test.py {args}"],stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()[-1]
+        # os.chdir(path='../script/yolov7')
+        # # run python3 test.py --weights best.pt --data defect.yaml --task test 
+        # args = "--weights best.pt --data defect.yaml --task test "
+        # return_value = subprocess.run([f"python3 test.py {args}"],stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()[-1]
 
-        # start index
+        # # start index
 
         
-        self.each_class_ap50 = ast.literal_eval(node_or_string=return_value)
+        # self.each_class_ap50 = ast.literal_eval(node_or_string=return_value)
         
         
-        for item, key in self.each_class_ap50.items():
-            if item == 'powder_uncover':
-                self.uncoverAPScore.setText(f'{ round(key, 3) }')
-            elif item == 'powder_uneven':
-                self.unevenAPScore.setText(f'{ round(key, 3) }')
-            else:
-                self.scratchAPScore.setText(f'{ round(key, 3) }')
+        # for item, key in self.each_class_ap50.items():
+        #     if item == 'powder_uncover':
+        #         self.uncoverAPScore.setText(f'{ round(key, 3) }')
+        #     elif item == 'powder_uneven':
+        #         self.unevenAPScore.setText(f'{ round(key, 3) }')
+        #     else:
+        #         self.scratchAPScore.setText(f'{ round(key, 3) }')
 
         self.folderPath = folderPath
         self.image_folder = image_folder
@@ -93,26 +99,62 @@ class Ui_Form(object):
             if reply == QMessageBox.Ok:
                 return None
             
- 
+            
+        # Open File Dialog
+        # the Dialog only can select .png or .jpg file and folder
+        self.file_path, _ = QFileDialog.getOpenFileNames(None, "Select a single file or multiple", "", "Images (*.png *.jpg)")
+        
+        # if user click cancel, then return to the main window
+        if self.file_path == '':
+            return None
+        
+        
+        if type(self.file_path) == str:
+            self.image_path = self.file_path
 
+            self.displayOriginalImage(self.image_path)
 
-        for index, filename in enumerate(os.listdir(self.image_folder)):
+            filename = self.image_path.split('/')[-1]
+            # display current image number
+            # find the index of the image in the self.image_folder
+            self.currentImgNum.setText(f'{ os.listdir(self.image_folder).index(filename) + 1}')
 
-            if filename.endswith('.jpg') or filename.endswith('.png'):
+            self.originalImageText.setText(filename)
 
-                self.image_path = os.path.join(self.image_folder, filename)
+            # display current image class
+            # read label file and get the class
+
+            img_label_path = self.label_folder + \
+                '/' + filename.split('.')[0] + '.txt'
+
+            img_label = open(img_label_path, 'r')
+
+            for line in img_label.readlines():
+                classes = line.split(' ')[0]
+                if classes == '0':
+                    self.groundTruthTypeText.setText('powder_uncover')
+                elif classes == '1':
+                    self.groundTruthTypeText.setText('powder_uneven')
+                else:
+                    self.groundTruthTypeText.setText('scratch')
+        elif type(self.file_path) == list:
+            self.image_folder = self.file_path
+            
+            for index, filename in enumerate(self.image_folder):
+                
+                self.image_path = filename
                 self.displayOriginalImage(self.image_path)
 
                 # display current image number
                 self.currentImgNum.setText(f'{ index + 1 }')
 
-                self.originalImageText.setText(filename)
+                self.originalImageText.setText(filename.split('/')[-1]).split('.')[0]
 
                 # display current image class
                 # read label file and get the class
 
-                img_label_path = self.label_folder + \
-                    '/' + filename.split('.')[0] + '.txt'
+                print(filename)
+                img_label_path = self.label_folder + '/' + filename.split('/')[-1].split('.')[0] + '.txt'
 
                 img_label = open(img_label_path, 'r')
 
@@ -126,6 +168,8 @@ class Ui_Form(object):
                         self.groundTruthTypeText.setText('scratch')
 
                 QTest.qWait(self.interval)
+
+
 
     def segmentDefectsEvent(self):
 
