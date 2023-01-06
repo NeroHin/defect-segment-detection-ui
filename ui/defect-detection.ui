@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1136</width>
+    <width>1143</width>
     <height>721</height>
    </rect>
   </property>
@@ -145,107 +145,18 @@
     </item>
    </layout>
   </widget>
-  <widget class="QLabel" name="originalImageText">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>110</y>
-     <width>331</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>IBM Plex Sans</family>
-     <pointsize>18</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Original Image</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="detectImageText_">
-   <property name="geometry">
-    <rect>
-     <x>400</x>
-     <y>110</y>
-     <width>331</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>IBM Plex Sans</family>
-     <pointsize>18</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Detect Image</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="segmentImageText">
-   <property name="geometry">
-    <rect>
-     <x>780</x>
-     <y>110</y>
-     <width>331</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>IBM Plex Sans</family>
-     <pointsize>18</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Segment Image</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="diceCoefficientText">
+  <widget class="QWidget" name="horizontalLayoutWidget_11">
    <property name="geometry">
     <rect>
      <x>760</x>
      <y>490</y>
-     <width>161</width>
+     <width>261</width>
      <height>41</height>
     </rect>
    </property>
-   <property name="font">
-    <font>
-     <family>IBM Plex Sans</family>
-     <pointsize>18</pointsize>
-     <underline>true</underline>
-    </font>
-   </property>
-   <property name="text">
-    <string>Dice Coefficient</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-   </property>
-  </widget>
-  <widget class="QWidget" name="">
-   <property name="geometry">
-    <rect>
-     <x>390</x>
-     <y>490</y>
-     <width>60</width>
-     <height>141</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="detectMetricLayout">
+   <layout class="QHBoxLayout" name="dcLayout">
     <item>
-     <widget class="QLabel" name="fpsText">
+     <widget class="QLabel" name="diceCoefficientText">
       <property name="font">
        <font>
         <family>IBM Plex Sans</family>
@@ -254,7 +165,7 @@
        </font>
       </property>
       <property name="text">
-       <string>FPS</string>
+       <string>Dice Coefficient:</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -262,7 +173,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="predictText">
+     <widget class="QLabel" name="scoreOfDC">
       <property name="font">
        <font>
         <family>IBM Plex Sans</family>
@@ -271,24 +182,7 @@
        </font>
       </property>
       <property name="text">
-       <string>Predict</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QLabel" name="iouText">
-      <property name="font">
-       <font>
-        <family>IBM Plex Sans</family>
-        <pointsize>18</pointsize>
-        <underline>true</underline>
-       </font>
-      </property>
-      <property name="text">
-       <string>IoU</string>
+       <string>/</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -301,96 +195,442 @@
    <property name="geometry">
     <rect>
      <x>10</x>
+     <y>110</y>
+     <width>1111</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="imgTextLayout">
+    <item>
+     <widget class="QLabel" name="originalImageText">
+      <property name="font">
+       <font>
+        <family>IBM Plex Sans</family>
+        <pointsize>18</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Original Image</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="detectImageText_">
+      <property name="font">
+       <font>
+        <family>IBM Plex Sans</family>
+        <pointsize>18</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Detect Image</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="segmentImageText">
+      <property name="font">
+       <font>
+        <family>IBM Plex Sans</family>
+        <pointsize>18</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Segment Image</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
      <y>490</y>
-     <width>160</width>
+     <width>331</width>
      <height>211</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="imgInfoLayout">
     <item>
-     <widget class="QLabel" name="currentImageNumber">
-      <property name="font">
-       <font>
-        <family>IBM Plex Sans</family>
-        <pointsize>18</pointsize>
-        <underline>true</underline>
-       </font>
+     <layout class="QHBoxLayout" name="currentImgLayout">
+      <property name="rightMargin">
+       <number>90</number>
       </property>
-      <property name="text">
-       <string>CurrentImage:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-      </property>
-     </widget>
+      <item>
+       <widget class="QLabel" name="currentImageNumber">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>CurrentImage:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="currentImgNum">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="signOfIsolation">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>/</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="folderImageNum">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
-     <widget class="QLabel" name="typeText">
-      <property name="font">
-       <font>
-        <family>IBM Plex Sans</family>
-        <pointsize>18</pointsize>
-        <underline>true</underline>
-       </font>
-      </property>
-      <property name="text">
-       <string>Type(Ground Truth)</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-      </property>
-     </widget>
+     <layout class="QHBoxLayout" name="gtLayout">
+      <item>
+       <widget class="QLabel" name="typeText">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>Type(Ground Truth):</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="groundTurthTypeText">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
-     <widget class="QLabel" name="uncoverAP">
-      <property name="font">
-       <font>
-        <family>IBM Plex Sans</family>
-        <pointsize>18</pointsize>
-        <underline>true</underline>
-       </font>
+     <layout class="QHBoxLayout" name="uncoverLayout">
+      <property name="rightMargin">
+       <number>70</number>
       </property>
-      <property name="text">
-       <string>AP50(uncover):</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-      </property>
-     </widget>
+      <item>
+       <widget class="QLabel" name="uncoverAPText">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>AP50(uncover):</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="uncoverAPScore">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
-     <widget class="QLabel" name="unevenAP">
-      <property name="font">
-       <font>
-        <family>IBM Plex Sans</family>
-        <pointsize>18</pointsize>
-        <underline>true</underline>
-       </font>
+     <layout class="QHBoxLayout" name="unevenLayout">
+      <property name="rightMargin">
+       <number>70</number>
       </property>
-      <property name="text">
-       <string>AP50(uneven):</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-      </property>
-     </widget>
+      <item>
+       <widget class="QLabel" name="unevenAPText">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>AP50(uneven):</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="unevenAPScore">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item>
-     <widget class="QLabel" name="scratchAP">
-      <property name="font">
-       <font>
-        <family>IBM Plex Sans</family>
-        <pointsize>18</pointsize>
-        <underline>true</underline>
-       </font>
+     <layout class="QHBoxLayout" name="scratchLayout">
+      <property name="rightMargin">
+       <number>70</number>
       </property>
-      <property name="text">
-       <string>AP50(Scratch):</string>
+      <item>
+       <widget class="QLabel" name="scratchAPText">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>AP50(Scratch):</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="scratchAPScore">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>490</y>
+     <width>271</width>
+     <height>151</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="detectMetricLayout">
+    <item>
+     <layout class="QHBoxLayout" name="fpsLayout">
+      <property name="rightMargin">
+       <number>180</number>
       </property>
-      <property name="alignment">
-       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      <item>
+       <widget class="QLabel" name="fpsText">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>FPS:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="scoreOfFPS">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="predictLayout">
+      <property name="rightMargin">
+       <number>0</number>
       </property>
-     </widget>
+      <item>
+       <widget class="QLabel" name="predictText">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>Predict:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="predictTypeText">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>-</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="iouLayout">
+      <property name="rightMargin">
+       <number>180</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="iouText">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>IoU:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="scoreOfIoU">
+        <property name="font">
+         <font>
+          <family>IBM Plex Sans</family>
+          <pointsize>18</pointsize>
+          <underline>true</underline>
+         </font>
+        </property>
+        <property name="text">
+         <string>/</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
