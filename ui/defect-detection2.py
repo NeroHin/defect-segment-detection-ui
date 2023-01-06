@@ -16,99 +16,140 @@ from PyQt5.QtTest import QTest
 import cv2
 import os
 import time
+import subprocess
+import ast
+
 
 class Ui_Form(object):
-    
-    
+
     def __init__(self):
         self.folderPath = ''
+        self.image_folder = ''
+        self.label_folder = ''
         self.interval = 2000
+        self.each_class_ap50 = dict()
 
-    
-    
     def selectFolder(self):
         ''' Select Image of Folder '''
-        
+
         # Open File Dialog
-        folderPath = QFileDialog.getExistingDirectory(None, 'Select a folder:', './', QFileDialog.ShowDirsOnly)
-        
+        folderPath = QFileDialog.getExistingDirectory(
+            None, 'Select a folder:', './', QFileDialog.ShowDirsOnly)
+
+        # image folder
+        image_folder = os.path.join(folderPath, 'image')
+
+        # ground truth folder
+        label_folder = os.path.join(folderPath, 'label')
+
         # Count Images number in folder
-        numOfImages = len([name for name in os.listdir(folderPath) if os.path.isfile(os.path.join(folderPath, name))])
-        
-        if folderPath:
+        numOfImages = len([name for name in os.listdir(
+            image_folder) if os.path.isfile(os.path.join(image_folder, name))])
+
+        if image_folder:
             self.folderImageNum.setText(f'{ numOfImages }')
             
-        self.folderPath = folderPath
-    
-    
-    def displayOriginalImage(self, image_path:str):
-        ''' Display Image '''
+            
+        os.chdir(path='../script/yolov7')
+        # run python3 test.py --weights best.pt --data defect.yaml --task test 
+        args = "--weights best.pt --data defect.yaml --task test "
+        return_value = subprocess.run([f"python3 test.py {args}"],stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()[-1]
+
+        # start index
+
         
+        self.each_class_ap50 = ast.literal_eval(node_or_string=return_value)
+        
+        
+        for item, key in self.each_class_ap50.items():
+            if item == 'powder_uncover':
+                self.uncoverAPScore.setText(f'{ round(key, 3) }')
+            elif item == 'powder_uneven':
+                self.unevenAPScore.setText(f'{ round(key, 3) }')
+            else:
+                self.scratchAPScore.setText(f'{ round(key, 3) }')
+
+        self.folderPath = folderPath
+        self.image_folder = image_folder
+        self.label_folder = label_folder
+
+    def displayOriginalImage(self, image_path: str):
+        ''' Display Image '''
+
         # Read Image
         pixmap = QPixmap(image_path)
-        resized_pixmap = pixmap.scaled(self.originalImage.height(), self.originalImage.width(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.FastTransformation)
+        resized_pixmap = pixmap.scaled(self.originalImage.height(), self.originalImage.width(
+        ), QtCore.Qt.KeepAspectRatio, QtCore.Qt.FastTransformation)
         self.originalImage.setPixmap(resized_pixmap)
-        
-
 
     def detectDefectsEvent(self):
-        
+
         # Get Folder Path
         if self.folderPath == '':
-            reply = QMessageBox.information(None, 'Warning', 'Please select a folder first', QMessageBox.Ok)
-            
+            reply = QMessageBox.information(
+                None, 'Warning', 'Please select a folder first', QMessageBox.Ok)
+
             # if user click ok, then return to the main window
             if reply == QMessageBox.Ok:
                 return None
-
-        
-        for index, filename in enumerate(os.listdir(self.folderPath)):
             
+ 
+
+
+        for index, filename in enumerate(os.listdir(self.image_folder)):
+
             if filename.endswith('.jpg') or filename.endswith('.png'):
-                
-                self.image_path = os.path.join(self.folderPath, filename)
+
+                self.image_path = os.path.join(self.image_folder, filename)
                 self.displayOriginalImage(self.image_path)
-                
+
                 # display current image number
                 self.currentImgNum.setText(f'{ index + 1 }')
 
-                
+                self.originalImageText.setText(filename)
+
                 # display current image class
-                if 'powder' in filename:
-                    self.groundTruthTypeText.setText((filename.split('_')[0] +  '_' + filename.split('_')[1]))
-                else:
-                    self.groundTruthTypeText.setText(filename.split('_')[0])
-                
+                # read label file and get the class
+
+                img_label_path = self.label_folder + \
+                    '/' + filename.split('.')[0] + '.txt'
+
+                img_label = open(img_label_path, 'r')
+
+                for line in img_label.readlines():
+                    classes = line.split(' ')[0]
+                    if classes == '0':
+                        self.groundTruthTypeText.setText('powder_uncover')
+                    elif classes == '1':
+                        self.groundTruthTypeText.setText('powder_uneven')
+                    else:
+                        self.groundTruthTypeText.setText('scratch')
+
                 QTest.qWait(self.interval)
 
-
-    
     def segmentDefectsEvent(self):
-        
+
         # Get Folder Path
-        
+
         if self.folderPath == '':
-            reply = QMessageBox.information(None, 'Warning', 'Please select a folder first', QMessageBox.Ok)
-            
+            reply = QMessageBox.information(
+                None, 'Warning', 'Please select a folder first', QMessageBox.Ok)
+
             # if user click ok, then return to the main window
             if reply == QMessageBox.Ok:
                 return None
-        
+
         self.groundTruthTypeText.setText(self.folderPath)
-        
-    
-        
-        
-        
+
     def setupUi(self, Form):
         Form.setObjectName("Form")
         Form.resize(1143, 721)
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         Form.setFont(font)
-        
-        ### Btn Group
-        
+
+        # Btn Group
+
         # Select Folder Button
         self.horizontalLayoutWidget = QtWidgets.QWidget(Form)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(10, 20, 1111, 71))
@@ -119,7 +160,8 @@ class Ui_Form(object):
         self.btnLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
         self.btnLayout.setContentsMargins(0, 0, 0, 0)
         self.btnLayout.setObjectName("btnLayout")
-        self.selectFolderBtn = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.selectFolderBtn = QtWidgets.QPushButton(
+            self.horizontalLayoutWidget)
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(20)
@@ -129,9 +171,10 @@ class Ui_Form(object):
         # Click to batch select images from a folder
         self.selectFolderBtn.clicked.connect(self.selectFolder)
         ##############################
-        
+
         # Detect Defects Button
-        self.detectDefectsBtn = QtWidgets.QPushButton(self.horizontalLayoutWidget)
+        self.detectDefectsBtn = QtWidgets.QPushButton(
+            self.horizontalLayoutWidget)
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(20)
@@ -140,7 +183,7 @@ class Ui_Form(object):
         self.btnLayout.addWidget(self.detectDefectsBtn)
         # when i click this button, i want to run the detect function
         self.detectDefectsBtn.clicked.connect(self.detectDefectsEvent)
-        
+
         ##############################
         self.segmentBtn = QtWidgets.QPushButton(self.horizontalLayoutWidget)
         font = QtGui.QFont()
@@ -151,9 +194,10 @@ class Ui_Form(object):
         self.btnLayout.addWidget(self.segmentBtn)
         # when i click this button, i want to run the segment function
         self.segmentBtn.clicked.connect(self.segmentDefectsEvent)
-        
+
         self.horizontalLayoutWidget_2 = QtWidgets.QWidget(Form)
-        self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(10, 150, 1111, 331))
+        self.horizontalLayoutWidget_2.setGeometry(
+            QtCore.QRect(10, 150, 1111, 331))
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         self.horizontalLayoutWidget_2.setFont(font)
@@ -189,18 +233,22 @@ class Ui_Form(object):
         self.segmentImage.setObjectName("segmentImage")
         self.imgLayout.addWidget(self.segmentImage)
         self.horizontalLayoutWidget_11 = QtWidgets.QWidget(Form)
-        self.horizontalLayoutWidget_11.setGeometry(QtCore.QRect(760, 490, 261, 41))
-        self.horizontalLayoutWidget_11.setObjectName("horizontalLayoutWidget_11")
+        self.horizontalLayoutWidget_11.setGeometry(
+            QtCore.QRect(760, 490, 261, 41))
+        self.horizontalLayoutWidget_11.setObjectName(
+            "horizontalLayoutWidget_11")
         self.dcLayout = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget_11)
         self.dcLayout.setContentsMargins(0, 0, 0, 0)
         self.dcLayout.setObjectName("dcLayout")
-        self.diceCoefficientText = QtWidgets.QLabel(self.horizontalLayoutWidget_11)
+        self.diceCoefficientText = QtWidgets.QLabel(
+            self.horizontalLayoutWidget_11)
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
         font.setUnderline(True)
         self.diceCoefficientText.setFont(font)
-        self.diceCoefficientText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.diceCoefficientText.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.diceCoefficientText.setObjectName("diceCoefficientText")
         self.dcLayout.addWidget(self.diceCoefficientText)
         self.scoreOfDC = QtWidgets.QLabel(self.horizontalLayoutWidget_11)
@@ -208,7 +256,8 @@ class Ui_Form(object):
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
         self.scoreOfDC.setFont(font)
-        self.scoreOfDC.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.scoreOfDC.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.scoreOfDC.setObjectName("scoreOfDC")
         self.dcLayout.addWidget(self.scoreOfDC)
         self.widget = QtWidgets.QWidget(Form)
@@ -256,7 +305,8 @@ class Ui_Form(object):
         font.setPointSize(18)
         font.setUnderline(True)
         self.currentImageNumberText.setFont(font)
-        self.currentImageNumberText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.currentImageNumberText.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.currentImageNumberText.setObjectName("currentImageNumber")
         self.currentImgLayout.addWidget(self.currentImageNumberText)
         self.currentImgNum = QtWidgets.QLabel(self.widget1)
@@ -295,7 +345,8 @@ class Ui_Form(object):
         font.setPointSize(18)
         font.setUnderline(True)
         self.typeText.setFont(font)
-        self.typeText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.typeText.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.typeText.setObjectName("typeText")
         self.gtLayout.addWidget(self.typeText)
         self.groundTruthTypeText = QtWidgets.QLabel(self.widget1)
@@ -316,7 +367,8 @@ class Ui_Form(object):
         font.setPointSize(18)
         font.setUnderline(True)
         self.uncoverAPText.setFont(font)
-        self.uncoverAPText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.uncoverAPText.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.uncoverAPText.setObjectName("uncoverAPText")
         self.uncoverLayout.addWidget(self.uncoverAPText)
         self.uncoverAPScore = QtWidgets.QLabel(self.widget1)
@@ -325,7 +377,8 @@ class Ui_Form(object):
         font.setPointSize(18)
 
         self.uncoverAPScore.setFont(font)
-        self.uncoverAPScore.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.uncoverAPScore.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.uncoverAPScore.setObjectName("uncoverAPScore")
         self.uncoverLayout.addWidget(self.uncoverAPScore)
         self.imgInfoLayout.addLayout(self.uncoverLayout)
@@ -338,7 +391,8 @@ class Ui_Form(object):
         font.setPointSize(18)
         font.setUnderline(True)
         self.unevenAPText.setFont(font)
-        self.unevenAPText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.unevenAPText.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.unevenAPText.setObjectName("unevenAPText")
         self.unevenLayout.addWidget(self.unevenAPText)
         self.unevenAPScore = QtWidgets.QLabel(self.widget1)
@@ -346,7 +400,8 @@ class Ui_Form(object):
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
         self.unevenAPScore.setFont(font)
-        self.unevenAPScore.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.unevenAPScore.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.unevenAPScore.setObjectName("unevenAPScore")
         self.unevenLayout.addWidget(self.unevenAPScore)
         self.imgInfoLayout.addLayout(self.unevenLayout)
@@ -359,7 +414,8 @@ class Ui_Form(object):
         font.setPointSize(18)
         font.setUnderline(True)
         self.scratchAPText.setFont(font)
-        self.scratchAPText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.scratchAPText.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.scratchAPText.setObjectName("scratchAPText")
         self.scratchLayout.addWidget(self.scratchAPText)
         self.scratchAPScore = QtWidgets.QLabel(self.widget1)
@@ -367,7 +423,8 @@ class Ui_Form(object):
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
         self.scratchAPScore.setFont(font)
-        self.scratchAPScore.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.scratchAPScore.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.scratchAPScore.setObjectName("scratchAPScore")
         self.scratchLayout.addWidget(self.scratchAPScore)
         self.imgInfoLayout.addLayout(self.scratchLayout)
@@ -386,7 +443,8 @@ class Ui_Form(object):
         font.setPointSize(18)
         font.setUnderline(True)
         self.fpsText.setFont(font)
-        self.fpsText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.fpsText.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.fpsText.setObjectName("fpsText")
         self.fpsLayout.addWidget(self.fpsText)
         self.scoreOfFPS = QtWidgets.QLabel(self.widget2)
@@ -394,7 +452,8 @@ class Ui_Form(object):
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
         self.scoreOfFPS.setFont(font)
-        self.scoreOfFPS.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.scoreOfFPS.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.scoreOfFPS.setObjectName("scoreOfFPS")
         self.fpsLayout.addWidget(self.scoreOfFPS)
         self.detectMetricLayout.addLayout(self.fpsLayout)
@@ -407,7 +466,8 @@ class Ui_Form(object):
         font.setPointSize(18)
         font.setUnderline(True)
         self.predictText.setFont(font)
-        self.predictText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.predictText.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.predictText.setObjectName("predictText")
         self.predictLayout.addWidget(self.predictText)
         self.predictTypeText = QtWidgets.QLabel(self.widget2)
@@ -416,7 +476,8 @@ class Ui_Form(object):
         font.setPointSize(18)
 
         self.predictTypeText.setFont(font)
-        self.predictTypeText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.predictTypeText.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.predictTypeText.setObjectName("predictTypeText")
         self.predictLayout.addWidget(self.predictTypeText)
         self.detectMetricLayout.addLayout(self.predictLayout)
@@ -429,7 +490,8 @@ class Ui_Form(object):
         font.setPointSize(18)
         font.setUnderline(True)
         self.iouText.setFont(font)
-        self.iouText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.iouText.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.iouText.setObjectName("iouText")
         self.iouLayout.addWidget(self.iouText)
         self.scoreOfIoU = QtWidgets.QLabel(self.widget2)
@@ -438,7 +500,8 @@ class Ui_Form(object):
         font.setPointSize(18)
 
         self.scoreOfIoU.setFont(font)
-        self.scoreOfIoU.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.scoreOfIoU.setAlignment(
+            QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         self.scoreOfIoU.setObjectName("scoreOfIoU")
         self.iouLayout.addWidget(self.scoreOfIoU)
         self.detectMetricLayout.addLayout(self.iouLayout)
@@ -452,12 +515,14 @@ class Ui_Form(object):
         self.selectFolderBtn.setText(_translate("Form", "Select Image Folder"))
         self.detectDefectsBtn.setText(_translate("Form", "Detect Defects"))
         self.segmentBtn.setText(_translate("Form", "Segment"))
-        self.diceCoefficientText.setText(_translate("Form", "Dice Coefficient:"))
+        self.diceCoefficientText.setText(
+            _translate("Form", "Dice Coefficient:"))
         self.scoreOfDC.setText(_translate("Form", "-"))
         self.originalImageText.setText(_translate("Form", "Original Image"))
         self.detectImageText_.setText(_translate("Form", "Detect Image"))
         self.segmentImageText.setText(_translate("Form", "Segment Image"))
-        self.currentImageNumberText.setText(_translate("Form", "CurrentImage:"))
+        self.currentImageNumberText.setText(
+            _translate("Form", "CurrentImage:"))
         self.currentImgNum.setText(_translate("Form", "-"))
         self.signOfIsolation.setText(_translate("Form", "/"))
         self.folderImageNum.setText(_translate("Form", "-"))
