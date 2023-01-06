@@ -161,7 +161,7 @@ def detect(save_img=False):
         #print(f"Results saved to {save_dir}{s}")
 
     print(f'Done. ({time.time() - t0:.3f}s)')
-
+    return names[int(c)],
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
