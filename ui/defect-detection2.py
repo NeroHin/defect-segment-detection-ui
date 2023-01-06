@@ -54,7 +54,6 @@ class Ui_Form(object):
     def detectDefectsEvent(self):
         
         # Get Folder Path
-        
         if self.folderPath == '':
             reply = QMessageBox.information(None, 'Warning', 'Please select a folder first', QMessageBox.Ok)
             
@@ -65,21 +64,23 @@ class Ui_Form(object):
         
         for index, filename in enumerate(os.listdir(self.folderPath)):
             
-            
-            self.image_path = os.path.join(self.folderPath, filename)
-            self.displayOriginalImage(self.image_path)
-            
-            # display current image number
-            self.currentImgNum.setText(f'{ index + 1 }')
+            if filename.endswith('.jpg') or filename.endswith('.png'):
+                
+                self.image_path = os.path.join(self.folderPath, filename)
+                self.displayOriginalImage(self.image_path)
+                
+                # display current image number
+                self.currentImgNum.setText(f'{ index + 1 }')
 
-            
-            # display current image class
-            if 'powder' in filename:
-                self.groundTruthTypeText.setText((filename.split('_')[0] +  '_' + filename.split('_')[1]))
-            else:
-                self.groundTruthTypeText.setText(filename.split('_')[0])
-            
-            QTest.qWait(self.interval)
+                
+                # display current image class
+                if 'powder' in filename:
+                    self.groundTruthTypeText.setText((filename.split('_')[0] +  '_' + filename.split('_')[1]))
+                else:
+                    self.groundTruthTypeText.setText(filename.split('_')[0])
+                
+                QTest.qWait(self.interval)
+
 
     
     def segmentDefectsEvent(self):
