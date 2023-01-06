@@ -9,7 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap, QImage
 
 import cv2
@@ -41,23 +41,23 @@ class Ui_Form(object):
     def displayOriginalImage(self, image_path:str):
         ''' Display Image '''
         
-        self.img = cv2.imread(image_path)
+        # Read Image
+        pixmap = QPixmap(image_path)
+        resized_pixmap = pixmap.scaled(self.originalImage.height(), self.originalImage.width(), QtCore.Qt.KeepAspectRatio, QtCore.Qt.FastTransformation)
+        self.originalImage.setPixmap(resized_pixmap)
         
-        height, width, channel = self.img.shape
         
-        # resize image with originalImage label size
-        height = int(height * (self.originalImage.width() / width))
-        width = self.originalImage.width()
-        
-        bytesPerline = 3 * width
-        
-        # Show Image in originalImage
-        self.qimg = QImage(self.img.data, width, height, bytesPerline, QImage.Format_RGB888).rgbSwapped()
-        self.originalImage.setPixmap(QPixmap.fromImage(self.qimg))
 
     def detectDefects(self):
         
         # Get Folder Path
+        
+        if self.folderPath == '':
+            reply = QMessageBox.information(None, 'Warning', 'Please select a folder first', QMessageBox.Ok)
+            
+            # if user click ok, then return to the main window
+            if reply == QMessageBox.Ok:
+                return None
         
         self.groundTruthTypeText.setText(self.folderPath)
         
@@ -77,7 +77,20 @@ class Ui_Form(object):
             else:
                 self.groundTruthTypeText.setText(filename.split('_')[0])
                 
+    
+    def segmentDefects(self):
+        
+        # Get Folder Path
+        
+        if self.folderPath == '':
+            reply = QMessageBox.information(None, 'Warning', 'Please select a folder first', QMessageBox.Ok)
             
+            # if user click ok, then return to the main window
+            if reply == QMessageBox.Ok:
+                return None
+        
+        self.groundTruthTypeText.setText(self.folderPath)
+        
     
         
         
@@ -131,6 +144,9 @@ class Ui_Form(object):
         self.segmentBtn.setFont(font)
         self.segmentBtn.setObjectName("segmentBtn")
         self.btnLayout.addWidget(self.segmentBtn)
+        # when i click this button, i want to run the segment function
+        self.segmentBtn.clicked.connect(self.segmentDefects)
+        
         self.horizontalLayoutWidget_2 = QtWidgets.QWidget(Form)
         self.horizontalLayoutWidget_2.setGeometry(QtCore.QRect(10, 150, 1111, 331))
         font = QtGui.QFont()
@@ -186,7 +202,6 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
         self.scoreOfDC.setFont(font)
         self.scoreOfDC.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.scoreOfDC.setObjectName("scoreOfDC")
@@ -243,7 +258,7 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
+
         self.currentImgNum.setFont(font)
         self.currentImgNum.setAlignment(QtCore.Qt.AlignCenter)
         self.currentImgNum.setObjectName("currentImgNum")
@@ -252,7 +267,7 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
+
         self.signOfIsolation.setFont(font)
         self.signOfIsolation.setAlignment(QtCore.Qt.AlignCenter)
         self.signOfIsolation.setObjectName("signOfIsolation")
@@ -261,7 +276,7 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
+
         self.folderImageNum.setFont(font)
         self.folderImageNum.setAlignment(QtCore.Qt.AlignCenter)
         self.folderImageNum.setObjectName("folderImageNum")
@@ -282,7 +297,6 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
         self.groundTruthTypeText.setFont(font)
         self.groundTruthTypeText.setAlignment(QtCore.Qt.AlignCenter)
         self.groundTruthTypeText.setObjectName("groundTruthTypeText")
@@ -304,7 +318,7 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
+
         self.uncoverAPScore.setFont(font)
         self.uncoverAPScore.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.uncoverAPScore.setObjectName("uncoverAPScore")
@@ -326,7 +340,6 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
         self.unevenAPScore.setFont(font)
         self.unevenAPScore.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.unevenAPScore.setObjectName("unevenAPScore")
@@ -348,7 +361,6 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
         self.scratchAPScore.setFont(font)
         self.scratchAPScore.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.scratchAPScore.setObjectName("scratchAPScore")
@@ -376,7 +388,6 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
         self.scoreOfFPS.setFont(font)
         self.scoreOfFPS.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.scoreOfFPS.setObjectName("scoreOfFPS")
@@ -398,7 +409,7 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
+
         self.predictTypeText.setFont(font)
         self.predictTypeText.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.predictTypeText.setObjectName("predictTypeText")
@@ -420,7 +431,7 @@ class Ui_Form(object):
         font = QtGui.QFont()
         font.setFamily("IBM Plex Sans")
         font.setPointSize(18)
-        font.setUnderline(True)
+
         self.scoreOfIoU.setFont(font)
         self.scoreOfIoU.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.scoreOfIoU.setObjectName("scoreOfIoU")
