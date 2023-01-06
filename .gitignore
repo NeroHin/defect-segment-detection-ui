@@ -1,5 +1,10 @@
 # model weighted
 weighted/
+script/yolov7/runs/detect
+script/yolov7/inference/images
+defect/
+runs/
+*pt
 
 # vscode extension
 .vscode/
