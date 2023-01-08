@@ -44,14 +44,13 @@ class Ui_Form(object):
         self.calculate_mean_iou = list()
         self.dice_coef = float()
 
-
     def selectFolder(self):
         ''' Select Image of Folder '''
 
         # Open File Dialog
         folderPath = QFileDialog.getExistingDirectory(
             None, 'Select a folder:', './', QFileDialog.ShowDirsOnly)
-        
+
         # if user click cancel, then return to the main window
         if folderPath == '':
             return None
@@ -61,7 +60,7 @@ class Ui_Form(object):
 
         # ground truth folder
         label_folder = os.path.join(folderPath, 'label')
-        
+
         # ground truth mask folder
         mask_folder = os.path.join(folderPath, 'mask')
 
@@ -71,36 +70,33 @@ class Ui_Form(object):
 
         if image_folder:
             self.folderImageNum.setText(f'{ numOfImages }')
-            
-            
-        # os.chdir(path='../script/yolov7')
-        # # run python3 test.py --weights best.pt --data defect.yaml --task test 
-        # args = "--weights best.pt --data defect.yaml --task test "
-        # return_value = subprocess.run([f"python3 test.py {args}"],stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()[-1]
 
-        
-        # self.each_class_ap50 = ast.literal_eval(node_or_string=return_value)
-        
-        
-        # for item, key in self.each_class_ap50.items():
-        #     if item == 'powder_uncover':
-        #         self.uncoverAPScore.setText(f'{ round(key, 3) }')
-        #     elif item == 'powder_uneven':
-        #         self.unevenAPScore.setText(f'{ round(key, 3) }')
-        #     else:
-        #         self.scratchAPScore.setText(f'{ round(key, 3) }')
+        os.chdir(path='../script/yolov7')
+        # run python3 test.py --weights best.pt --data defect.yaml --task test
+        args = "--weights best.pt --data defect.yaml --task test "
+        return_value = subprocess.run(
+            [f"python3 test.py {args}"], stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()[-1]
+
+        self.each_class_ap50 = ast.literal_eval(node_or_string=return_value)
+
+        for item, key in self.each_class_ap50.items():
+            if item == 'powder_uncover':
+                self.uncoverAPScore.setText(f'{ round(key, 3) }')
+            elif item == 'powder_uneven':
+                self.unevenAPScore.setText(f'{ round(key, 3) }')
+            else:
+                self.scratchAPScore.setText(f'{ round(key, 3) }')
 
         self.folderPath = folderPath
         self.image_folder = image_folder
         self.label_folder = label_folder
         self.mask_folder = mask_folder
-        
 
-    def displayOriginalImage(self,img, image_path:str=None):
+    def displayOriginalImage(self, img, image_path: str = None):
         ''' Display Image '''
 
         if image_path is not None:
-        # Read Image
+            # Read Image
             pixmap = QPixmap(image_path)
             resized_pixmap = pixmap.scaled(self.originalImage.height(), self.originalImage.width(
             ), QtCore.Qt.KeepAspectRatio, QtCore.Qt.FastTransformation)
@@ -110,8 +106,7 @@ class Ui_Form(object):
             resized_pixmap = pixmap.scaled(self.originalImage.height(), self.originalImage.width(
             ), QtCore.Qt.KeepAspectRatio, QtCore.Qt.FastTransformation)
             self.originalImage.setPixmap(resized_pixmap)
-    
-    
+
     def displayPredictImage(self, image_path: str):
         ''' Display Detect Image '''
 
@@ -130,7 +125,6 @@ class Ui_Form(object):
         ), QtCore.Qt.KeepAspectRatio, QtCore.Qt.FastTransformation)
         self.segmentImage.setPixmap(resized_pixmap)
 
-
     def detectDefectsEvent(self):
 
         # Get Folder Path
@@ -141,22 +135,23 @@ class Ui_Form(object):
             # if user click ok, then return to the main window
             if reply == QMessageBox.Ok:
                 return None
-            
+
         # Open File Dialog
         # the Dialog only can select .png or .jpg file and folder
-        self.file_path, _ = QFileDialog.getOpenFileNames(None, "Select a single file or multiple", "", "Images (*.png *.jpg)")
+        self.file_path, _ = QFileDialog.getOpenFileNames(
+            None, "Select a single file or multiple", "", "Images (*.png *.jpg)")
 
         # if user click cancel, then return to the main window
         if self.file_path == '':
             return None
-        
+
         if len(self.file_path) == 1:
             self.image_path = self.file_path[0]
 
             filename = self.image_path.split('/')[-1]
             # display current image number
             # find the index of the image in the self.image_folder
-            self.currentImgNum.setText(f'{ os.listdir(self.image_folder).index(filename) + 1}')
+            self.currentImgNum.setText('1')
 
             self.originalImageText.setText(filename)
 
@@ -168,7 +163,7 @@ class Ui_Form(object):
 
             img_label = open(img_label_path, 'r')
             ground_truth_bbox_list = []
-            
+
             selected_img = Image.open(self.image_path)
             w, h = selected_img.size
 
@@ -180,60 +175,61 @@ class Ui_Form(object):
                     self.groundTruthTypeText.setText('powder_uneven')
                 else:
                     self.groundTruthTypeText.setText('scratch')
-                    
+
                 gt_bbox = line.split(' ')[1:5]
                 gt_bbox[-1] = gt_bbox[-1].strip('\n')
                 gt_bbox = [round(float(i), 6) for i in gt_bbox]
-                
-        
+
                 ground_truth_bbox_list.append(gt_bbox)
-                
 
             self.displayOriginalImage(img=selected_img)
-            
+
             # if getcwd() is not the yolov7 folder, then change the directory to yolov7
             if os.getcwd().split('/')[-1] != 'yolov7':
-                os.chdir('../script/yolov7')
-            
+                if os.getcwd().split('/')[-2] == 'script':
+                    os.chdir('../yolov7')
+                else:
+                    os.chdir('../script/yolov7')
 
-            # run python3 test.py --weights best.pt --data defect.yaml --task test 
+            # run python3 test.py --weights best.pt --data defect.yaml --task test
             args = f"--weights best.pt --conf 0.4 --img-size 640 --source  { self.image_path } --save-txt --save-conf "
-            return_value = subprocess.run([f"python3 detect.py {args}"],stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()
-            
+            return_value = subprocess.run(
+                [f"python3 detect.py {args}"], stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()
+
             for index, value in enumerate(return_value):
                 print(f'{index} : {value}')
-                
 
             # get inference time
             self.scoreOfFPS.setText(return_value[9])
-                
+
             # get the predict image path
             self.detect_image = return_value[-1]
-            
+
             # get the predict class
             self.predict_classes = return_value[-3]
-            
+
             # display the predict class
             self.predictTypeText.setText(self.predict_classes)
-            
+
             # display the predict image
             self.displayPredictImage(self.detect_image)
-            
+
             # display the predict image name
             self.detectImageText_.setText(return_value[-1].split('/')[-1])
-            
-            pre_bbox_list = []
-            pre_bbox = self.detect_image.split('/')[0] + '/' + self.detect_image.split('/')[1] + '/' + self.detect_image.split('/')[2] + '/labels/' +  self.detect_image.split('/')[-1].split('.')[0] + '.txt'
 
-            # read the predict bbox 
+            pre_bbox_list = []
+            pre_bbox = self.detect_image.split('/')[0] + '/' + self.detect_image.split('/')[1] + '/' + self.detect_image.split('/')[
+                2] + '/labels/' + self.detect_image.split('/')[-1].split('.')[0] + '.txt'
+
+            # read the predict bbox
             for line in open(pre_bbox, 'r').readlines():
                 pre_bbox_list.append(line.split(' ')[1:5])
-            
 
-                        
-            self.predict_bbox = [[float(x) for x in sublist] for sublist in pre_bbox_list]
-            self.ground_truth_bbox =  [[float(x) for x in sublist] for sublist in ground_truth_bbox_list]
-            
+            self.predict_bbox = [[float(x) for x in sublist]
+                                 for sublist in pre_bbox_list]
+            self.ground_truth_bbox = [
+                [float(x) for x in sublist] for sublist in ground_truth_bbox_list]
+
             if len(self.predict_bbox) != len(self.ground_truth_bbox):
                 reply = QMessageBox.information(
                     None, 'Warning', 'The number of predict bbox and ground truth bbox is not equal', QMessageBox.Ok)
@@ -241,14 +237,15 @@ class Ui_Form(object):
                 # if user click ok, then return to the main window
                 if reply == QMessageBox.Ok:
                     return None
-               
+
             else:
                 mean_iou = []
                 for bbox in range(0, len(self.predict_bbox)):
                     # calculate the iou
-                    bbox2 = xywh2xyxy(data=self.predict_bbox[bbox], img_w=w , img_h=h)
-                    bbox1 =  xywh2xyxy(data=self.ground_truth_bbox[bbox], img_w=w , img_h=h)
-                    
+                    bbox2 = xywh2xyxy(
+                        data=self.predict_bbox[bbox], img_w=w, img_h=h)
+                    bbox1 = xywh2xyxy(
+                        data=self.ground_truth_bbox[bbox], img_w=w, img_h=h)
 
                     xi1 = max(bbox1[0], bbox2[0])
                     yi1 = max(bbox1[1], bbox2[1])
@@ -258,8 +255,7 @@ class Ui_Form(object):
 
                     box1_area = (bbox1[2] - bbox1[0]) * (bbox1[3] - bbox1[1])
                     box2_area = (bbox2[2] - bbox2[0]) * (bbox2[3] - bbox2[1])
-                
-                    
+
                     union_area = box1_area + box2_area - inter_area
 
                     iou = inter_area / union_area
@@ -268,25 +264,26 @@ class Ui_Form(object):
                 print(mean_iou)
                 print(f"mean iou: {sum(mean_iou)/len(mean_iou)}")
                 self.scoreOfIoU.setText(f"{sum(mean_iou)/len(mean_iou)}")
-                  
-                       
+
         elif type(self.file_path) == list:
             self.image_folder = self.file_path
-            
+
             for index, filename in enumerate(self.image_folder):
-                
+
                 self.image_path = filename
                 self.displayOriginalImage(self.image_path)
 
                 # display current image number
                 self.currentImgNum.setText(f'{ index + 1 }')
 
-                self.originalImageText.setText(filename.split('/')[-1].split('.')[0])
+                self.originalImageText.setText(
+                    filename.split('/')[-1].split('.')[0])
 
                 # display current image class
                 # read label file and get the class
 
-                img_label_path = self.label_folder + '/' + filename.split('/')[-1].split('.')[0] + '.txt'
+                img_label_path = self.label_folder + '/' + \
+                    filename.split('/')[-1].split('.')[0] + '.txt'
 
                 img_label = open(img_label_path, 'r')
 
@@ -312,25 +309,26 @@ class Ui_Form(object):
             # if user click ok, then return to the main window
             if reply == QMessageBox.Ok:
                 return None
-            
+
         # Open File Dialog
         # the Dialog only can select .png or .jpg file and folder
-        self.file_path, _ = QFileDialog.getOpenFileNames(None, "Select a single file or multiple", "", "Images (*.png *.jpg)")
+        self.file_path, _ = QFileDialog.getOpenFileNames(
+            None, "Select a single file or multiple", "", "Images (*.png *.jpg)")
 
         # if user click cancel, then return to the main window
         if self.file_path == '':
             return None
-        
-        
+
         if len(self.file_path) == 1:
             self.image_path = self.file_path[0]
             self.displayOriginalImage(img=self.image_path)
-            
+
             filename = self.image_path.split('/')[-1]
-            
+
             # display current image number
             # find the index of the image in the self.image_folder
-            self.currentImgNum.setText(f'{ os.listdir(self.image_folder).index(filename) + 1}')
+            self.currentImgNum.setText(
+                f'{ os.listdir(self.image_folder).index(filename) + 1}')
             self.originalImageText.setText(filename)
 
             # display current image class
@@ -338,9 +336,9 @@ class Ui_Form(object):
             img_label_path = self.label_folder + \
                 '/' + filename.split('.')[0] + '.txt'
             img_label = open(img_label_path, 'r')
-            
-            img_mask_path = self.mask_folder + '/' + filename.split('.')[0] + '.png'
-        
+
+            img_mask_path = self.mask_folder + \
+                '/' + filename.split('.')[0] + '.png'
 
             for line in img_label.readlines():
                 classes = line.split(' ')[0]
@@ -351,46 +349,41 @@ class Ui_Form(object):
                 else:
                     self.groundTruthTypeText.setText('scratch')
 
-            
             # if getcwd() is not the yolov7 folder, then change the directory to yolov7
             if os.getcwd().split('/')[-1] != 'unet':
-                os.chdir('../script/unet')
-            
+                if os.getcwd().split('/')[-2] == 'script':
+                    os.chdir('../unet')
+                else:
+                    os.chdir('../script/unet')
 
             args = f"--model unet_best.pth --input { self.image_path } --output output/{ self.image_path.split('/')[-1] } "
-            return_value = subprocess.run([f"python3 predict.py {args}"],stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()
-            
+            return_value = subprocess.run(
+                [f"python3 predict.py {args}"], stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()
+
             for index, value in enumerate(return_value):
                 print(f'{index} : {value}')
-            
-            
 
             # get inference time
             self.scoreOfFPS.setText(return_value[0])
-                
+
             # get the predict image path
             self.segment_image = return_value[1]
-            
+
             # display the segment image
             self.displaySegmentImage(image_path=self.segment_image)
-            
-            gt_mask = cv2.imread((self.mask_folder + '/' + filename), cv2.IMREAD_GRAYSCALE)
+
+            # display image name
+            self.segmentImageText.setText(self.segment_image.split('/')[-1])
+
+            gt_mask = cv2.imread(
+                (self.mask_folder + '/' + filename), cv2.IMREAD_GRAYSCALE)
             pred_mask = cv2.imread((self.segment_image), cv2.IMREAD_GRAYSCALE)
-            
+
             # calculate the dice_coefficient
             self.dice_coef = dice_coef(y_true=gt_mask, y_pred=pred_mask)
-            
+
             # display the dice coefficient
             self.scoreOfDC.setText(f'{self.dice_coef}')
-            
-            
-            
-            
-
-
-                        
-
-         
 
     def setupUi(self, Form):
         Form.setObjectName("Form")
