@@ -22,6 +22,7 @@ import time
 import subprocess
 import ast
 from xywh2xyxy import xywh2xyxy
+from dice_coef import dice_average_sets, dice_coef
 
 
 class Ui_Form(object):
@@ -30,15 +31,19 @@ class Ui_Form(object):
         self.folderPath = ''
         self.image_folder = ''
         self.label_folder = ''
+        self.mask_folder = ''
         self.interval = 2000
         self.each_class_ap50 = dict()
         self.predict_classes = str()
         self.file_path = str()
         self.detect_image = str()
+        self.segment_image = str()
         self.predict_bbox = list()
         self.ground_truth_bbox_path = 'script/yolov7/defect/labels/test'
         self.ground_truth_bbox = list()
         self.calculate_mean_iou = list()
+        self.dice_coef = float()
+
 
     def selectFolder(self):
         ''' Select Image of Folder '''
@@ -56,6 +61,9 @@ class Ui_Form(object):
 
         # ground truth folder
         label_folder = os.path.join(folderPath, 'label')
+        
+        # ground truth mask folder
+        mask_folder = os.path.join(folderPath, 'mask')
 
         # Count Images number in folder
         numOfImages = len([name for name in os.listdir(
@@ -85,6 +93,8 @@ class Ui_Form(object):
         self.folderPath = folderPath
         self.image_folder = image_folder
         self.label_folder = label_folder
+        self.mask_folder = mask_folder
+        
 
     def displayOriginalImage(self,img, image_path:str=None):
         ''' Display Image '''
@@ -102,7 +112,6 @@ class Ui_Form(object):
             self.originalImage.setPixmap(resized_pixmap)
     
     
-    
     def displayPredictImage(self, image_path: str):
         ''' Display Detect Image '''
 
@@ -111,6 +120,15 @@ class Ui_Form(object):
         resized_pixmap = pixmap.scaled(self.detectImage.height(), self.detectImage.width(
         ), QtCore.Qt.KeepAspectRatio, QtCore.Qt.FastTransformation)
         self.detectImage.setPixmap(resized_pixmap)
+
+    def displaySegmentImage(self, image_path: str):
+        ''' Display Detect Image '''
+
+        # Read Image
+        pixmap = QPixmap(image_path)
+        resized_pixmap = pixmap.scaled(self.detectImage.height(), self.detectImage.width(
+        ), QtCore.Qt.KeepAspectRatio, QtCore.Qt.FastTransformation)
+        self.segmentImage.setPixmap(resized_pixmap)
 
 
     def detectDefectsEvent(self):
@@ -171,7 +189,7 @@ class Ui_Form(object):
                 ground_truth_bbox_list.append(gt_bbox)
                 
 
-                self.displayOriginalImage(img=selected_img)
+            self.displayOriginalImage(img=selected_img)
             
             # if getcwd() is not the yolov7 folder, then change the directory to yolov7
             if os.getcwd().split('/')[-1] != 'yolov7':
@@ -187,7 +205,7 @@ class Ui_Form(object):
                 
 
             # get inference time
-            
+            self.scoreOfFPS.setText(return_value[9])
                 
             # get the predict image path
             self.detect_image = return_value[-1]
@@ -251,8 +269,7 @@ class Ui_Form(object):
                 print(f"mean iou: {sum(mean_iou)/len(mean_iou)}")
                 self.scoreOfIoU.setText(f"{sum(mean_iou)/len(mean_iou)}")
                   
-                
-                    
+                       
         elif type(self.file_path) == list:
             self.image_folder = self.file_path
             
@@ -284,8 +301,6 @@ class Ui_Form(object):
 
                 QTest.qWait(self.interval)
 
-
-
     def segmentDefectsEvent(self):
 
         # Get Folder Path
@@ -297,8 +312,85 @@ class Ui_Form(object):
             # if user click ok, then return to the main window
             if reply == QMessageBox.Ok:
                 return None
+            
+        # Open File Dialog
+        # the Dialog only can select .png or .jpg file and folder
+        self.file_path, _ = QFileDialog.getOpenFileNames(None, "Select a single file or multiple", "", "Images (*.png *.jpg)")
 
-        self.groundTruthTypeText.setText(self.folderPath)
+        # if user click cancel, then return to the main window
+        if self.file_path == '':
+            return None
+        
+        
+        if len(self.file_path) == 1:
+            self.image_path = self.file_path[0]
+            self.displayOriginalImage(img=self.image_path)
+            
+            filename = self.image_path.split('/')[-1]
+            
+            # display current image number
+            # find the index of the image in the self.image_folder
+            self.currentImgNum.setText(f'{ os.listdir(self.image_folder).index(filename) + 1}')
+            self.originalImageText.setText(filename)
+
+            # display current image class
+            # read label file and get the class
+            img_label_path = self.label_folder + \
+                '/' + filename.split('.')[0] + '.txt'
+            img_label = open(img_label_path, 'r')
+            
+            img_mask_path = self.mask_folder + '/' + filename.split('.')[0] + '.png'
+        
+
+            for line in img_label.readlines():
+                classes = line.split(' ')[0]
+                if classes == '0':
+                    self.groundTruthTypeText.setText('powder_uncover')
+                elif classes == '1':
+                    self.groundTruthTypeText.setText('powder_uneven')
+                else:
+                    self.groundTruthTypeText.setText('scratch')
+
+            
+            # if getcwd() is not the yolov7 folder, then change the directory to yolov7
+            if os.getcwd().split('/')[-1] != 'unet':
+                os.chdir('../script/unet')
+            
+
+            args = f"--model unet_best.pth --input { self.image_path } --output output/{ self.image_path.split('/')[-1] } "
+            return_value = subprocess.run([f"python3 predict.py {args}"],stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()
+            
+            for index, value in enumerate(return_value):
+                print(f'{index} : {value}')
+            
+            
+
+            # get inference time
+            self.scoreOfFPS.setText(return_value[0])
+                
+            # get the predict image path
+            self.segment_image = return_value[1]
+            
+            # display the segment image
+            self.displaySegmentImage(image_path=self.segment_image)
+            
+            gt_mask = cv2.imread((self.mask_folder + '/' + filename), cv2.IMREAD_GRAYSCALE)
+            pred_mask = cv2.imread((self.segment_image), cv2.IMREAD_GRAYSCALE)
+            
+            # calculate the dice_coefficient
+            self.dice_coef = dice_coef(y_true=gt_mask, y_pred=pred_mask)
+            
+            # display the dice coefficient
+            self.scoreOfDC.setText(f'{self.dice_coef}')
+            
+            
+            
+            
+
+
+                        
+
+         
 
     def setupUi(self, Form):
         Form.setObjectName("Form")
