@@ -279,22 +279,32 @@ class Ui_Form(object):
 
             for index, filename in enumerate(self.image_folder):
 
+                # image path
+                
                 self.image_path = filename
-                self.displayOriginalImage(self.image_path)
+                
+                filename = filename.split('/')[-1]
 
-                # display current image number
-                self.currentImgNum.setText(f'{ index + 1 }')
+                # find the index of the image in the self.image_folder
+                self.currentImgNum.setText(str(index + 1))
 
-                self.originalImageText.setText(
-                    filename.split('/')[-1].split('.')[0])
+                self.originalImageText.setText(filename)
 
                 # display current image class
                 # read label file and get the class
 
-                img_label_path = self.label_folder + '/' + \
-                    filename.split('/')[-1].split('.')[0] + '.txt'
+                img_label_path = self.label_folder + \
+                    '/' + filename.split('.')[0] + '.txt'
+                    
+                img_bbox_path = self.bbox_folder + \
+                    '/' + filename.split('.')[0] + '_bbox.png'
 
                 img_label = open(img_label_path, 'r')
+                ground_truth_bbox_list = []
+
+                selected_img = Image.open(self.image_path)
+
+                w, h = selected_img.size
 
                 for line in img_label.readlines():
                     classes = line.split(' ')[0]
@@ -304,6 +314,95 @@ class Ui_Form(object):
                         self.groundTruthTypeText.setText('powder_uneven')
                     else:
                         self.groundTruthTypeText.setText('scratch')
+
+                    gt_bbox = line.split(' ')[1:5]
+                    gt_bbox[-1] = gt_bbox[-1].strip('\n')
+                    gt_bbox = [round(float(i), 6) for i in gt_bbox]
+
+                    ground_truth_bbox_list.append(gt_bbox)
+
+                self.displayOriginalImage(image_path=img_bbox_path)
+
+                # if getcwd() is not the yolov7 folder, then change the directory to yolov7
+                if os.getcwd().split('/')[-1] != 'yolov7':
+                    if os.getcwd().split('/')[-2] == 'script':
+                        os.chdir('../yolov7')
+                    else:
+                        os.chdir('../script/yolov7')
+
+                # run python3 test.py --weights best.pt --data defect.yaml --task test
+                args = f"--weights best.pt --conf 0.4 --img-size 640 --source  { self.image_path } --save-txt --save-conf "
+                return_value = subprocess.run(
+                    [f"python3 detect.py {args}"], stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()
+
+                # for index, value in enumerate(return_value):
+                #     print(f'{index} : {value}')
+
+                # get inference time
+                self.scoreOfFPS.setText(return_value[9])
+
+                # get the predict image path
+                self.detect_image = return_value[-1]
+
+                # get the predict class
+                self.predict_classes = return_value[-3]
+
+                # display the predict class
+                self.predictTypeText.setText(self.predict_classes)
+
+                # display the predict image
+                self.displayPredictImage(self.detect_image)
+
+                # display the predict image name
+                self.detectImageText_.setText(return_value[-1].split('/')[-1])
+
+                pre_bbox_list = []
+                pre_bbox = self.detect_image.split('/')[0] + '/' + self.detect_image.split('/')[1] + '/' + self.detect_image.split('/')[
+                    2] + '/labels/' + self.detect_image.split('/')[-1].split('.')[0] + '.txt'
+
+                # read the predict bbox
+                for line in open(pre_bbox, 'r').readlines():
+                    pre_bbox_list.append(line.split(' ')[1:5])
+
+                self.predict_bbox = [[float(x) for x in sublist]
+                                    for sublist in pre_bbox_list]
+                self.ground_truth_bbox = [
+                    [float(x) for x in sublist] for sublist in ground_truth_bbox_list]
+
+                if len(self.predict_bbox) != len(self.ground_truth_bbox):
+                    reply = QMessageBox.information(
+                        None, 'Warning', 'The number of predict bbox and ground truth bbox is not equal', QMessageBox.Ok)
+
+                    # if user click ok, then return to the main window
+                    if reply == QMessageBox.Ok:
+                        return None
+
+                else:
+                    mean_iou = []
+                    for bbox in range(0, len(self.predict_bbox)):
+                        # calculate the iou
+                        bbox2 = xywh2xyxy(
+                            data=self.predict_bbox[bbox], img_w=w, img_h=h)
+                        bbox1 = xywh2xyxy(
+                            data=self.ground_truth_bbox[bbox], img_w=w, img_h=h)
+
+                        xi1 = max(bbox1[0], bbox2[0])
+                        yi1 = max(bbox1[1], bbox2[1])
+                        xi2 = min(bbox1[2], bbox2[2])
+                        yi2 = min(bbox1[3], bbox2[3])
+                        inter_area = (yi2 - yi1) * (xi2 - xi1)
+
+                        box1_area = (bbox1[2] - bbox1[0]) * (bbox1[3] - bbox1[1])
+                        box2_area = (bbox2[2] - bbox2[0]) * (bbox2[3] - bbox2[1])
+
+                        union_area = box1_area + box2_area - inter_area
+
+                        iou = inter_area / union_area
+
+                        mean_iou.append(iou)
+                    print(mean_iou)
+                    print(f"mean iou: {sum(mean_iou)/len(mean_iou)}")
+                    self.scoreOfIoU.setText(f"{sum(mean_iou)/len(mean_iou)}")
 
                 QTest.qWait(self.interval)
 
@@ -396,6 +495,79 @@ class Ui_Form(object):
 
             # display the dice coefficient
             self.scoreOfDC.setText(f'{self.dice_coef}')
+        
+        elif len(self.file_path) >= 2:
+            
+            self.image_folder = self.file_path
+
+            for index, filename in enumerate(self.image_folder):
+                
+                self.image_path = filename
+                
+                filename = filename.split('/')[-1]
+
+
+                # find the index of the image in the self.image_folder
+                self.currentImgNum.setText(str(index + 1))
+                self.originalImageText.setText(filename)
+
+                # display current image class
+                # read label file and get the class
+                img_label_path = self.label_folder + \
+                    '/' + filename.split('.')[0] + '.txt'
+                img_label = open(img_label_path, 'r')
+
+                img_mask_path = self.mask_folder + \
+                    '/' + filename.split('.')[0] + '.png'
+
+                for line in img_label.readlines():
+                    classes = line.split(' ')[0]
+                    if classes == '0':
+                        self.groundTruthTypeText.setText('powder_uncover')
+                    elif classes == '1':
+                        self.groundTruthTypeText.setText('powder_uneven')
+                    else:
+                        self.groundTruthTypeText.setText('scratch')
+
+                # if getcwd() is not the yolov7 folder, then change the directory to yolov7
+                if os.getcwd().split('/')[-1] != 'unet':
+                    if os.getcwd().split('/')[-2] == 'script':
+                        os.chdir('../unet')
+                    else:
+                        os.chdir('../script/unet')
+
+                args = f"--model unet_best.pth --input { self.image_path } --output output/{ self.image_path.split('/')[-1] } "
+                return_value = subprocess.run(
+                    [f"python3 predict.py {args}"], stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()
+
+
+
+                # get inference time
+                self.scoreOfFPS.setText(return_value[0])
+
+                # get the predict image path
+                self.segment_image = return_value[1]
+
+                # display the segment image
+                self.displaySegmentImage(image_path=self.segment_image)
+                
+                # display the mask image
+                self.displayOriginalImage(img=self.mask_folder + '/' + filename)
+
+                # display image name
+                self.segmentImageText.setText(self.segment_image.split('/')[-1])
+
+                gt_mask = cv2.imread(
+                    (self.mask_folder + '/' + filename), cv2.IMREAD_GRAYSCALE)
+                pred_mask = cv2.imread((self.segment_image), cv2.IMREAD_GRAYSCALE)
+
+                # calculate the dice_coefficient
+                self.dice_coef = dice_coef(y_true=gt_mask, y_pred=pred_mask)
+
+                # display the dice coefficient
+                self.scoreOfDC.setText(f'{self.dice_coef}')
+            
+            QTest.qWait(self.interval)
 
     def setupUi(self, Form):
         Form.setObjectName("Form")
