@@ -3,6 +3,7 @@ weighted/
 script/yolov7/runs/detect
 script/yolov7/inference/images
 defect/
+test/
 runs/
 *pt
 
