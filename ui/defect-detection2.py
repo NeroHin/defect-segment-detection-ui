@@ -32,6 +32,7 @@ class Ui_Form(object):
         self.image_folder = ''
         self.label_folder = ''
         self.mask_folder = ''
+        self.bbox_folder = ''
         self.interval = 2000
         self.each_class_ap50 = dict()
         self.predict_classes = str()
@@ -63,6 +64,9 @@ class Ui_Form(object):
 
         # ground truth mask folder
         mask_folder = os.path.join(folderPath, 'mask')
+        
+        # bbox folder
+        bbox_folder = os.path.join(folderPath, 'bbox')
 
         # Count Images number in folder
         numOfImages = len([name for name in os.listdir(
@@ -91,8 +95,9 @@ class Ui_Form(object):
         self.image_folder = image_folder
         self.label_folder = label_folder
         self.mask_folder = mask_folder
+        self.bbox_folder = bbox_folder
 
-    def displayOriginalImage(self, img, image_path: str = None):
+    def displayOriginalImage(self, img=None, image_path:str=None):
         ''' Display Image '''
 
         if image_path is not None:
@@ -101,7 +106,7 @@ class Ui_Form(object):
             resized_pixmap = pixmap.scaled(self.originalImage.height(), self.originalImage.width(
             ), QtCore.Qt.KeepAspectRatio, QtCore.Qt.FastTransformation)
             self.originalImage.setPixmap(resized_pixmap)
-        if img:
+        if img is not None:
             pixmap = QPixmap.fromImage(ImageQt(img))
             resized_pixmap = pixmap.scaled(self.originalImage.height(), self.originalImage.width(
             ), QtCore.Qt.KeepAspectRatio, QtCore.Qt.FastTransformation)
@@ -149,7 +154,7 @@ class Ui_Form(object):
             self.image_path = self.file_path[0]
 
             filename = self.image_path.split('/')[-1]
-            # display current image number
+
             # find the index of the image in the self.image_folder
             self.currentImgNum.setText('1')
 
@@ -160,11 +165,15 @@ class Ui_Form(object):
 
             img_label_path = self.label_folder + \
                 '/' + filename.split('.')[0] + '.txt'
+                
+            img_bbox_path = self.bbox_folder + \
+                '/' + filename.split('.')[0] + '_bbox.png'
 
             img_label = open(img_label_path, 'r')
             ground_truth_bbox_list = []
 
             selected_img = Image.open(self.image_path)
+
             w, h = selected_img.size
 
             for line in img_label.readlines():
@@ -182,7 +191,7 @@ class Ui_Form(object):
 
                 ground_truth_bbox_list.append(gt_bbox)
 
-            self.displayOriginalImage(img=selected_img)
+            self.displayOriginalImage(image_path=img_bbox_path)
 
             # if getcwd() is not the yolov7 folder, then change the directory to yolov7
             if os.getcwd().split('/')[-1] != 'yolov7':
@@ -196,8 +205,8 @@ class Ui_Form(object):
             return_value = subprocess.run(
                 [f"python3 detect.py {args}"], stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()
 
-            for index, value in enumerate(return_value):
-                print(f'{index} : {value}')
+            # for index, value in enumerate(return_value):
+            #     print(f'{index} : {value}')
 
             # get inference time
             self.scoreOfFPS.setText(return_value[9])
@@ -265,7 +274,7 @@ class Ui_Form(object):
                 print(f"mean iou: {sum(mean_iou)/len(mean_iou)}")
                 self.scoreOfIoU.setText(f"{sum(mean_iou)/len(mean_iou)}")
 
-        elif type(self.file_path) == list:
+        elif len(self.file_path) >= 2:
             self.image_folder = self.file_path
 
             for index, filename in enumerate(self.image_folder):
@@ -321,7 +330,7 @@ class Ui_Form(object):
 
         if len(self.file_path) == 1:
             self.image_path = self.file_path[0]
-            self.displayOriginalImage(img=self.image_path)
+            
 
             filename = self.image_path.split('/')[-1]
 
@@ -371,6 +380,9 @@ class Ui_Form(object):
 
             # display the segment image
             self.displaySegmentImage(image_path=self.segment_image)
+            
+            # display the mask image
+            self.displayOriginalImage(img=self.mask_folder + '/' + filename)
 
             # display image name
             self.segmentImageText.setText(self.segment_image.split('/')[-1])
