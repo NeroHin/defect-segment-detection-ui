@@ -64,7 +64,7 @@ class Ui_Form(object):
 
         # ground truth mask folder
         mask_folder = os.path.join(folderPath, 'mask')
-        
+
         # bbox folder
         bbox_folder = os.path.join(folderPath, 'bbox')
 
@@ -97,7 +97,7 @@ class Ui_Form(object):
         self.mask_folder = mask_folder
         self.bbox_folder = bbox_folder
 
-    def displayOriginalImage(self, img=None, image_path:str=None):
+    def displayOriginalImage(self, img=None, image_path: str = None):
         ''' Display Image '''
 
         if image_path is not None:
@@ -165,7 +165,7 @@ class Ui_Form(object):
 
             img_label_path = self.label_folder + \
                 '/' + filename.split('.')[0] + '.txt'
-                
+
             img_bbox_path = self.bbox_folder + \
                 '/' + filename.split('.')[0] + '_bbox.png'
 
@@ -280,9 +280,9 @@ class Ui_Form(object):
             for index, filename in enumerate(self.image_folder):
 
                 # image path
-                
+
                 self.image_path = filename
-                
+
                 filename = filename.split('/')[-1]
 
                 # find the index of the image in the self.image_folder
@@ -295,7 +295,7 @@ class Ui_Form(object):
 
                 img_label_path = self.label_folder + \
                     '/' + filename.split('.')[0] + '.txt'
-                    
+
                 img_bbox_path = self.bbox_folder + \
                     '/' + filename.split('.')[0] + '_bbox.png'
 
@@ -365,7 +365,7 @@ class Ui_Form(object):
                     pre_bbox_list.append(line.split(' ')[1:5])
 
                 self.predict_bbox = [[float(x) for x in sublist]
-                                    for sublist in pre_bbox_list]
+                                     for sublist in pre_bbox_list]
                 self.ground_truth_bbox = [
                     [float(x) for x in sublist] for sublist in ground_truth_bbox_list]
 
@@ -392,8 +392,10 @@ class Ui_Form(object):
                         yi2 = min(bbox1[3], bbox2[3])
                         inter_area = (yi2 - yi1) * (xi2 - xi1)
 
-                        box1_area = (bbox1[2] - bbox1[0]) * (bbox1[3] - bbox1[1])
-                        box2_area = (bbox2[2] - bbox2[0]) * (bbox2[3] - bbox2[1])
+                        box1_area = (bbox1[2] - bbox1[0]) * \
+                            (bbox1[3] - bbox1[1])
+                        box2_area = (bbox2[2] - bbox2[0]) * \
+                            (bbox2[3] - bbox2[1])
 
                         union_area = box1_area + box2_area - inter_area
 
@@ -429,7 +431,6 @@ class Ui_Form(object):
 
         if len(self.file_path) == 1:
             self.image_path = self.file_path[0]
-            
 
             filename = self.image_path.split('/')[-1]
 
@@ -479,7 +480,7 @@ class Ui_Form(object):
 
             # display the segment image
             self.displaySegmentImage(image_path=self.segment_image)
-            
+
             # display the mask image
             self.displayOriginalImage(img=self.mask_folder + '/' + filename)
 
@@ -495,17 +496,16 @@ class Ui_Form(object):
 
             # display the dice coefficient
             self.scoreOfDC.setText(f'{self.dice_coef}')
-        
+
         elif len(self.file_path) >= 2:
-            
+
             self.image_folder = self.file_path
 
             for index, filename in enumerate(self.image_folder):
-                
-                self.image_path = filename
-                
-                filename = filename.split('/')[-1]
 
+                self.image_path = filename
+
+                filename = filename.split('/')[-1]
 
                 # find the index of the image in the self.image_folder
                 self.currentImgNum.setText(str(index + 1))
@@ -540,8 +540,6 @@ class Ui_Form(object):
                 return_value = subprocess.run(
                     [f"python3 predict.py {args}"], stdout=subprocess.PIPE, universal_newlines=True, shell=True).stdout.splitlines()
 
-
-
                 # get inference time
                 self.scoreOfFPS.setText(return_value[0])
 
@@ -550,23 +548,26 @@ class Ui_Form(object):
 
                 # display the segment image
                 self.displaySegmentImage(image_path=self.segment_image)
-                
+
                 # display the mask image
-                self.displayOriginalImage(img=self.mask_folder + '/' + filename)
+                self.displayOriginalImage(
+                    img=self.mask_folder + '/' + filename)
 
                 # display image name
-                self.segmentImageText.setText(self.segment_image.split('/')[-1])
+                self.segmentImageText.setText(
+                    self.segment_image.split('/')[-1])
 
                 gt_mask = cv2.imread(
                     (self.mask_folder + '/' + filename), cv2.IMREAD_GRAYSCALE)
-                pred_mask = cv2.imread((self.segment_image), cv2.IMREAD_GRAYSCALE)
+                pred_mask = cv2.imread(
+                    (self.segment_image), cv2.IMREAD_GRAYSCALE)
 
                 # calculate the dice_coefficient
                 self.dice_coef = dice_coef(y_true=gt_mask, y_pred=pred_mask)
 
                 # display the dice coefficient
                 self.scoreOfDC.setText(f'{self.dice_coef}')
-            
+
             QTest.qWait(self.interval)
 
     def setupUi(self, Form):
