@@ -436,8 +436,7 @@ class Ui_Form(object):
 
             # display current image number
             # find the index of the image in the self.image_folder
-            self.currentImgNum.setText(
-                f'{ os.listdir(self.image_folder).index(filename) + 1}')
+            self.currentImgNum.setText('1')
             self.originalImageText.setText(filename)
 
             # display current image class
