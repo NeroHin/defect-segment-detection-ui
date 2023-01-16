@@ -21,7 +21,8 @@ pip install -r requirements.txt
 cd defect-segment-detection-ui/ui
 ```
 
-3. run ui
+3. run UI
 ```bash
 python  defect-detection2.py
 ```
+4. 
