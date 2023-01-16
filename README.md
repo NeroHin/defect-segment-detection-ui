@@ -25,4 +25,13 @@ cd defect-segment-detection-ui/ui
 ```bash
 python  defect-detection2.py
 ```
-4. 
+4. download the model with [release](https://github.com/NeroHin/defect-segment-detection-ui/releases/tag/weighted) and move it to the model directory
+```bash
+
+# move to yolov7
+mv yolov7_best.pt ../script/yolov7
+
+# move to unet
+mv unet_best.pth ../script/unet
+
+```
